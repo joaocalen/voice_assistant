@@ -83,24 +83,20 @@ export default function HomePage() {
   });
 
   const handleFileUpload = (file) => {
-    if (file) {
+    if (file) {      
+      console.log("Gravado");
       console.log(file);
-      // determine if file is image or audio
+      console.log(file.originalFile.type);
       if (
         ["audio/mpeg", "audio/wav", "audio/ogg"].includes(
-          file.originalFile.mime
+          file.originalFile.type
         )
       ) {
-        setAudio(file.fileUrl);
-        setSize(VERSIONS[4]);
+        setAudio(file.name);
+        // setSize(VERSIONS[2]);
+        // handleSubmit("teste");        
         toast.success(
-          "You uploaded an audio file, so you're now speaking with Salmonn."
-        );
-      } else if (["image/jpeg", "image/png"].includes(file.originalFile.mime)) {
-        setImage(file.fileUrl);
-        setSize(VERSIONS[3]);
-        toast.success(
-          "You uploaded an image, so you're now speaking with Llava."
+          "Audio sent successfully."
         );
       } else {
         toast.error(

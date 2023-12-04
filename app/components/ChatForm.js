@@ -44,9 +44,6 @@ const ChatForm = ({ prompt, setPrompt, onSubmit, handleFileUpload }) => {
       };
     }
   };
-  
-
-
 
   const handleSubmit = async (event) => {
     event.preventDefault();
