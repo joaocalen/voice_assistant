@@ -38,7 +38,6 @@ i {
 }
 
 #recordButton {
-    background-color: #4CAF50;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -49,3 +48,11 @@ i {
 #recordButton i {
     margin-right: 5px;
 }
+
+.recording-button {
+    background-color: red; /* or any color indicating recording */    
+  }
+  
+  .normal-button {
+    background-color: green; /* your default button color */    
+  }

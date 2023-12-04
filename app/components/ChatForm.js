@@ -1,51 +1,59 @@
-import { Uploader } from "uploader";
-import { UploadButton } from "react-uploader";
 
-const uploader = Uploader({
-  apiKey: "public_kW15biSARCJN7FAz6rANdRg3pNkh",
-});
-
-const options = {
-  apiKey: "public_kW15biSARCJN7FAz6rANdRg3pNkh",
-  maxFileCount: 1,
-  mimeTypes: [
-    "image/jpeg",
-    "image/png",
-    "audio/mpeg",
-    "audio/wav",
-    "audio/ogg",
-  ],
-  showFinishButton: false,
-  preview: true,
-  editor: {
-    images: {
-      preview: false,
-      crop: false,
-    },
-  },
-  styles: {
-    colors: {
-      active: "#1f2937",
-      error: "#d23f4d",
-      primary: "#4b5563",
-    },
-    fontFamilies: {
-      base: "inter, -apple-system, blinkmacsystemfont, Segoe UI, helvetica, arial, sans-serif",
-    },
-    fontSizes: {
-      base: 16,
-    },
-  },
-};
+import React, { useState, useRef } from "react";
 
 const ChatForm = ({ prompt, setPrompt, onSubmit, handleFileUpload }) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const [recordingStatus, setRecordingStatus] = useState('');
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      mediaRecorderRef.current.start();
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.addEventListener("dataavailable", (event) => {
+        audioChunksRef.current.push(event.data);
+      });
+
+      setIsRecording(true);
+      setRecordingStatus('Recording...');
+    } catch (error) {
+      console.error("Error accessing media devices:", error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.onstop = () => {        
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });  
+        // Create a File object from the Blob
+        const audioFile = new File([audioBlob], "recording.wav", { type: "audio/wav" });          
+        const customFileObject = {
+          originalFile: audioFile,
+          // Add other properties that your handleFileUpload function might expect
+        };
+  
+        handleFileUpload(customFileObject);
+        setIsRecording(false);
+        setRecordingStatus('Recorded Successfully');
+        setTimeout(() => setRecordingStatus(''), 3000);        
+      };
+    }
+  };
+  
+
+
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     onSubmit(prompt);
     setPrompt("");
     event.target.rows = 1;
   };
-
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -57,20 +65,15 @@ const ChatForm = ({ prompt, setPrompt, onSubmit, handleFileUpload }) => {
     <footer className="z-10 fixed bottom-0 left-0 right-0 bg-slate-100 border-t-2">
       <div className="container max-w-2xl mx-auto p-5 pb-8">
         <form className="w-full flex" onSubmit={handleSubmit}>
-          <UploadButton
-            uploader={uploader}
-            options={options}
-            onComplete={(files) => handleFileUpload(files[0])}
-          >
-            {({ onClick }) => (
-              <button
-                id="recordButton"
-                onClick={onClick}
-              ><i class="fa fa-microphone"></i>
-
-              </button>
-            )}
-          </UploadButton>
+        <button
+          id="recordButton"
+          onMouseDown={startRecording}
+          onMouseUp={stopRecording}
+          className={isRecording ? 'recording-button' : 'normal-button'}
+        >
+        <i className="fa fa-microphone"></i>
+        </button>
+        <span>{recordingStatus}</span>
           <textarea
             autoComplete="off"
             autoFocus
