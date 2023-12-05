@@ -18,14 +18,17 @@ export async function POST(req) {
 
   console.log(params.audio)
 
-  const response = params.audio
-    ? await runSeamlessM4T(params)
-    : await runLlama(params);
+  const response = await runLlama(params);
 
   // Convert the response into a friendly text-stream
+  console.log("response");
+  console.log(response);
+  console.log("====");
+
   const stream = await ReplicateStream(response);
-  // Respond with the stream
   return new StreamingTextResponse(stream);
+  //
+  // Respond with the stream  
 }
 
 async function runLlama({
@@ -51,29 +54,4 @@ async function runLlama({
     // IMPORTANT! The model must support streaming. See https://replicate.com/docs/streaming
     version: version,
   });
-}
-
-async function runSeamlessM4T({
-  task_name,
-  input_audio,
-  input_text_language,
-  max_input_audio_length,
-  target_language_text_only,
-  target_language_with_speech,
-}) {
-  console.log("running seamlessm4t");
-  return await replicate.predictions.create({
-    // IMPORTANT! You must enable streaming.
-    version: "668a4fec05a887143e5fe8d45df25ec4c794dd43169b9a11562309b2d45873b0",
-    stream: true,
-    input: {
-      task_name: "S2TT (Speech to Text translation)",
-      input_audio: "https://replicate.delivery/pbxt/JWSCV0Ai3RX6k2nkLrbQILRQN0zdcJcbFFPmfD8QDzp3xZaf/sample_input.mp3",
-      input_text_language: "None",
-      max_input_audio_length: 60,
-      target_language_text_only: "Norwegian Nynorsk",
-      target_language_with_speech: "French"
-    },        
-  });
-  
 }

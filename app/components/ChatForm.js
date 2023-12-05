@@ -1,11 +1,24 @@
 
 import React, { useState, useRef } from "react";
 
-const ChatForm = ({ prompt, setPrompt, onSubmit, handleFileUpload }) => {
+const ChatForm = ({ prompt, setPrompt, onSubmit, handleAudio }) => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const [recordingStatus, setRecordingStatus] = useState('');
+
+
+  function processAudio(audioBlob, callback) {
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = () => {
+        const base64data = reader.result;
+        callback(base64data);
+    };
+    reader.onerror = () => {
+        console.error("Error processing audio");
+    };
+}
 
   const startRecording = async () => {
     try {
@@ -25,22 +38,21 @@ const ChatForm = ({ prompt, setPrompt, onSubmit, handleFileUpload }) => {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (mediaRecorderRef.current) {
+      
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.onstop = () => {        
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });  
         // Create a File object from the Blob
         const audioFile = new File([audioBlob], "recording.wav", { type: "audio/wav" });          
-        const customFileObject = {
-          originalFile: audioFile,
-          // Add other properties that your handleFileUpload function might expect
-        };
-  
-        handleFileUpload(customFileObject);
         setIsRecording(false);
         setRecordingStatus('Recorded Successfully');
-        setTimeout(() => setRecordingStatus(''), 3000);        
+        setTimeout(() => setRecordingStatus(''), 3000);
+
+        processAudio(audioBlob, (processedAudio) => {
+          handleAudio(processedAudio);        
+        });
       };
     }
   };

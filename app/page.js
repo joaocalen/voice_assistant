@@ -6,7 +6,7 @@ import Message from "./components/Message";
 import SlideOver from "./components/SlideOver";
 import EmptyState from "./components/EmptyState";
 import { Cog6ToothIcon, CodeBracketIcon } from "@heroicons/react/20/solid";
-import { useCompletion } from "ai/react";
+import { useChat, useCompletion } from "ai/react";
 import { Toaster, toast } from "react-hot-toast";
 
 function approximateTokenCount(text) {
@@ -52,55 +52,78 @@ export default function HomePage() {
   const [error, setError] = useState(null);
 
   //   Llama params
-  const [size, setSize] = useState(VERSIONS[2]); // default to 70B
+  const [size, setSize] = useState(VERSIONS[0]); // default to 7B
   const [systemPrompt, setSystemPrompt] = useState(
     "You are a helpful assistant."
   );
   const [temp, setTemp] = useState(0.75);
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(800);
-
-  //  Llava params
-  const [image, setImage] = useState(null);
-
-  // Salmonn params
-  const [audio, setAudio] = useState(null);
+  
+  const [audio, setAudio] = useState(new File([],""));
 
   const { complete, completion, setInput, input } = useCompletion({
-    api: "/api",
+    api: "/apillama",
     body: {
       version: size.version,
       systemPrompt: systemPrompt,
       temperature: parseFloat(temp),
       topP: parseFloat(topP),
-      maxTokens: parseInt(maxTokens),
-      image: image,
-      audio: audio,
+      maxTokens: parseInt(maxTokens),      
     },
     onError: (error) => {
       setError(error);
     },
   });
 
-  const handleFileUpload = (file) => {
+  const {append, sendMessage, isLoading } = useChat({
+    api: "/apim4t",
+    body: {
+      task_name: "S2TT (Speech to Text translation)",
+      input_audio: audio.name,
+      input_text_language: "None",
+      max_input_audio_length: 60,
+      target_language_text_only: "Portuguese",
+      target_language_with_speech: "Portuguese",
+    },
+    onError: (error) => {
+      setError(error);
+    },
+  });
+
+  const handleAudio = (file) => {  
+    function processAudio(audioBlob) {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = () => {
+              const base64data = reader.result;
+              resolve(base64data);
+          };
+          reader.onerror = () => {
+              reject(new Error("Error processing audio"));
+          };
+      });
+  }
     if (file) {      
       console.log("Gravado");
       console.log(file);
-      console.log(file.originalFile.type);
       if (
         ["audio/mpeg", "audio/wav", "audio/ogg"].includes(
-          file.originalFile.type
+          file.type
         )
       ) {
-        setAudio(file);
+        setAudio(file);        
+        console.log(file);
         // setSize(VERSIONS[2]);
-        handleSubmit("teste");        
+        // handleSubmit("teste");
+        // append([]);
         toast.success(
           "Audio sent successfully."
         );
       } else {
         toast.error(
-          `Sorry, we don't support that file type (${file.originalFile.mime}) yet. Feel free to push a PR to add support for it!`
+          `Sorry, we don't support that file type (${file.type}) yet.`
         );
       }
     }
@@ -220,7 +243,7 @@ export default function HomePage() {
 
       <main className="max-w-2xl pb-5 mx-auto mt-4 sm:px-4">
         <div className="text-center"></div>
-        {messages.length == 0 && !image && !audio && (
+        {messages.length == 0 && !audio && (
           <EmptyState setPrompt={setAndSubmitPrompt} setOpen={setOpen} />
         )}
 
@@ -241,12 +264,6 @@ export default function HomePage() {
           setSize={setSize}
         />
 
-        {image && (
-          <div>
-            <img src={image} className="mt-6 sm:rounded-xl" />
-          </div>
-        )}
-
         {audio && (
           <div>
             <audio controls src={audio} className="mt-6 sm:rounded-xl" />
@@ -257,7 +274,7 @@ export default function HomePage() {
           prompt={input}
           setPrompt={setInput}
           onSubmit={handleSubmit}
-          handleFileUpload={handleFileUpload}
+          handleAudio={handleAudio}
         />
 
         {error && <div>{error}</div>}
