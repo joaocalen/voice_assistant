@@ -16,6 +16,8 @@ export const runtime = "edge";
 export async function POST(req) {
   const params = await req.json();
 
+  console.log(params.audio)
+
   const response = params.audio
     ? await runSeamlessM4T(params)
     : await runLlama(params);
@@ -62,6 +64,7 @@ async function runSeamlessM4T({
   console.log("running seamlessm4t");
   return await replicate.predictions.create({
     // IMPORTANT! You must enable streaming.
+    version: "668a4fec05a887143e5fe8d45df25ec4c794dd43169b9a11562309b2d45873b0",
     stream: true,
     input: {
       task_name: "S2TT (Speech to Text translation)",
@@ -70,8 +73,7 @@ async function runSeamlessM4T({
       max_input_audio_length: 60,
       target_language_text_only: "Norwegian Nynorsk",
       target_language_with_speech: "French"
-    },
-    // IMPORTANT! The model must support streaming. See https://replicate.com/docs/streaming
-    version: version,
+    },        
   });
+  
 }

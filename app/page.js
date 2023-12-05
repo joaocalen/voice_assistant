@@ -92,9 +92,9 @@ export default function HomePage() {
           file.originalFile.type
         )
       ) {
-        setAudio(file.name);
+        setAudio(file);
         // setSize(VERSIONS[2]);
-        // handleSubmit("teste");        
+        handleSubmit("teste");        
         toast.success(
           "Audio sent successfully."
         );
