@@ -19,6 +19,7 @@ export async function POST(req) {
 
   while(prediction.status == "processing" || prediction.status == "starting" ){
     prediction = await replicate.predictions.get(response.id);
+    console.log("checking: " + prediction.status);
   }
 //   const prediction = await replicate.wait(response);
   console.log("m4t response");

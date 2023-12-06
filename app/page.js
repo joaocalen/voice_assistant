@@ -60,7 +60,7 @@ export default function HomePage() {
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(800);
   
-  const [audio, setAudio] = useState(new File([],""));
+  const [audio, setAudio] = useState(null);
 
   const { complete, completion, setInput, input } = useCompletion({
     api: "/apillama",
@@ -76,11 +76,11 @@ export default function HomePage() {
     },
   });
 
-  const {append, sendMessage, isLoading } = useChat({
+  const {append, isLoading } = useChat({
     api: "/apim4t",
     body: {
       task_name: "S2TT (Speech to Text translation)",
-      input_audio: audio.name,
+      input_audio: audio,
       input_text_language: "None",
       max_input_audio_length: 60,
       target_language_text_only: "Portuguese",
@@ -92,41 +92,21 @@ export default function HomePage() {
   });
 
   const handleAudio = (file) => {  
-    function processAudio(audioBlob) {
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = () => {
-              const base64data = reader.result;
-              resolve(base64data);
-          };
-          reader.onerror = () => {
-              reject(new Error("Error processing audio"));
-          };
-      });
-  }
-    if (file) {      
-      console.log("Gravado");
-      console.log(file);
-      if (
-        ["audio/mpeg", "audio/wav", "audio/ogg"].includes(
-          file.type
-        )
-      ) {
-        setAudio(file);        
-        console.log(file);
-        // setSize(VERSIONS[2]);
-        // handleSubmit("teste");
-        // append([]);
+    if (file) {
+        setAudio(file);
+        append([]);
         toast.success(
           "Audio sent successfully."
         );
-      } else {
-        toast.error(
-          `Sorry, we don't support that file type (${file.type}) yet.`
-        );
-      }
+      
     }
+    else
+    {
+      toast.error(
+        `Sorry, something went wrong`
+        );
+    }
+    
   };
 
   const setAndSubmitPrompt = (newPrompt) => {
