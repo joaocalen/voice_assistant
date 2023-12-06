@@ -38,20 +38,19 @@ const ChatForm = ({ prompt, setPrompt, onSubmit, handleAudio }) => {
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = () => {
     if (mediaRecorderRef.current) {
       
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.onstop = () => {        
+      mediaRecorderRef.current.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });  
-        // Create a File object from the Blob
-        const audioFile = new File([audioBlob], "recording.wav", { type: "audio/wav" });          
+        // Create a File object from the Blob        
         setIsRecording(false);
         setRecordingStatus('Recorded Successfully');
         setTimeout(() => setRecordingStatus(''), 3000);
 
         processAudio(audioBlob, (processedAudio) => {
-          handleAudio(processedAudio);        
+          handleAudio(processedAudio);
         });
       };
     }
@@ -64,6 +63,7 @@ const ChatForm = ({ prompt, setPrompt, onSubmit, handleAudio }) => {
     event.target.rows = 1;
   };
   const handleKeyDown = (event) => {
+    console.log("key down");
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSubmit(event);
@@ -81,8 +81,7 @@ const ChatForm = ({ prompt, setPrompt, onSubmit, handleAudio }) => {
           className={isRecording ? 'recording-button' : 'normal-button'}
         >
         <i className="fa fa-microphone"></i>
-        </button>
-        <span>{recordingStatus}</span>
+        </button>        
           <textarea
             autoComplete="off"
             autoFocus

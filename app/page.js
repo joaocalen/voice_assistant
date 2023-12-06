@@ -61,6 +61,11 @@ export default function HomePage() {
   const [maxTokens, setMaxTokens] = useState(800);
   
   const [audio, setAudio] = useState(null);
+  const [task_name, setTaskName] = useState("S2TT (Speech to Text translation)");
+  const [input_text_language, setInputTextLanguage] = useState("None");
+  const [max_input_audio_length, setMaxInputAudioLength] = useState(60);
+  const [target_language_text_only, setTargetLanguageTextOnly] = useState("Portuguese");
+  const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("Portuguese");
 
   const { complete, completion, setInput, input } = useCompletion({
     api: "/apillama",
@@ -76,29 +81,27 @@ export default function HomePage() {
     },
   });
 
-  const {append, isLoading } = useChat({
+  const {append} = useChat({
     api: "/apim4t",
     body: {
-      task_name: "S2TT (Speech to Text translation)",
+      task_name: task_name,
       input_audio: audio,
-      input_text_language: "None",
-      max_input_audio_length: 60,
-      target_language_text_only: "Portuguese",
-      target_language_with_speech: "Portuguese",
+      input_text_language: input_text_language,
+      max_input_audio_length: max_input_audio_length,
+      target_language_text_only: target_language_text_only,
+      target_language_with_speech: target_language_with_speech,
     },
     onError: (error) => {
       setError(error);
     },
   });
 
-  const handleAudio = (file) => {  
+  const handleAudio = (file) => {
     if (file) {
         setAudio(file);
-        append([]);
         toast.success(
           "Audio sent successfully."
-        );
-      
+        );      
     }
     else
     {
@@ -167,6 +170,13 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    if (audio) {
+        // use function to stop existing API call
+        append([]);
+    }
+}, [audio]);
+
+  useEffect(() => {
     if (!localStorage.getItem("toastShown")) {
       toast.success(
         "We just updated our 7B model — it's super fast. Try it out!"
@@ -223,7 +233,7 @@ export default function HomePage() {
 
       <main className="max-w-2xl pb-5 mx-auto mt-4 sm:px-4">
         <div className="text-center"></div>
-        {messages.length == 0 && !audio && (
+        {messages.length == 0 && (
           <EmptyState setPrompt={setAndSubmitPrompt} setOpen={setOpen} />
         )}
 
@@ -244,11 +254,11 @@ export default function HomePage() {
           setSize={setSize}
         />
 
-        {audio && (
+        {/* {audio && (
           <div>
             <audio controls src={audio} className="mt-6 sm:rounded-xl" />
           </div>
-        )}
+        )} */}
 
         <ChatForm
           prompt={input}

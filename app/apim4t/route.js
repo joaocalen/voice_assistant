@@ -17,6 +17,7 @@ export async function POST(req) {
   const response = await runSeamlessM4T(params);
   let prediction = await replicate.predictions.get(response.id);
 
+  console.log("started: " + prediction);
   while(prediction.status == "processing" || prediction.status == "starting" ){
     prediction = await replicate.predictions.get(response.id);
     console.log("checking: " + prediction.status);
