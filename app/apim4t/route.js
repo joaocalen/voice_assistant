@@ -17,18 +17,25 @@ export async function POST(req) {
   const response = await runSeamlessM4T(params);
   let prediction = await replicate.predictions.get(response.id);
 
-  console.log("started: " + prediction);
-  while(prediction.status == "processing" || prediction.status == "starting" ){
-    prediction = await replicate.predictions.get(response.id);
-    console.log("checking: " + prediction.status);
-  }
-//   const prediction = await replicate.wait(response);
+  console.log(prediction);
+  // while(prediction.status == "processing" || prediction.status == "starting" ){
+  //   prediction = await replicate.predictions.get(response.id);
+  //   console.log("checking: " + prediction.status);
+  // }
+  //   const prediction = await replicate.wait(response);
   console.log("m4t response");
   console.log(prediction);
-  console.log("====");  
-  
 
-  return new Response(JSON.stringify(prediction));
+  console.log("====");
+  return new Promise((resolve, reject) => {
+    if (prediction.status == "succeeded"){
+      console.log("Suceeded");
+      console.log(prediction.output.text_output);
+      resolve(new Response(prediction.output.text_output));
+    } 
+    else
+      reject("Sorry, something went wrong. Please try again.")
+  });  
 }
 
 async function runSeamlessM4T({

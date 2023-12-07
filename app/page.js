@@ -62,7 +62,7 @@ export default function HomePage() {
   
   const [audio, setAudio] = useState(null);
   const [task_name, setTaskName] = useState("S2TT (Speech to Text translation)");
-  const [input_text_language, setInputTextLanguage] = useState("None");
+  const [input_text_language, setInputTextLanguage] = useState("Portuguese");
   const [max_input_audio_length, setMaxInputAudioLength] = useState(60);
   const [target_language_text_only, setTargetLanguageTextOnly] = useState("Portuguese");
   const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("Portuguese");
@@ -98,7 +98,7 @@ export default function HomePage() {
 
   const handleAudio = (file) => {
     if (file) {
-        setAudio(file);
+        setAudio(file);        
         toast.success(
           "Audio sent successfully."
         );      
@@ -170,11 +170,18 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (audio) {
-        // use function to stop existing API call
-        append([]);
-    }
+    renderAudio()
 }, [audio]);
+
+  const renderAudio = async () => {
+    if (audio) {
+      // use function to stop existing API call
+      append([]).then(
+        (res) => {console.log("qualquer coisa " + res)},
+        (error) => {console.log(error)}
+      )
+  }
+  }
 
   useEffect(() => {
     if (!localStorage.getItem("toastShown")) {
