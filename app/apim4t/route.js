@@ -16,13 +16,12 @@ export async function POST(req) {
   const params = await req.json();
   const response = await runSeamlessM4T(params);
   let prediction = await replicate.predictions.get(response.id);
-
-  console.log(prediction);
+  
   while(prediction.status == "processing" || prediction.status == "starting" ){
     prediction = await replicate.predictions.get(response.id);
     console.log("checking: " + prediction.status);
   }  
-  console.log(prediction);  
+  console.log(prediction);
   
   if (prediction.status == "succeeded")
     return new Response(prediction.output.text_output);

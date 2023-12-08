@@ -15,9 +15,6 @@ export const runtime = "edge";
 
 export async function POST(req) {
   const params = await req.json();
-
-  console.log(params.audio)
-
   const response = await runLlama(params);
 
   // Convert the response into a friendly text-stream

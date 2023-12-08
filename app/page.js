@@ -48,7 +48,7 @@ function CTA({ shortenedModelName }) {
 export default function HomePage() {
   const MAX_TOKENS = 4096;
   const bottomRef = useRef(null);
-  const [llamaMessages, setllamaMessages] = useState([]);
+  const [chatMessages, setchatMessages] = useState([]);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
 
@@ -98,8 +98,13 @@ export default function HomePage() {
   });
 
   const handleAudio = (file) => {
-    if (file) {
-        setAudio(file);        
+    if (file) {        
+        setTaskName("ASR (Automatic Speech Recognition)");
+        setInputTextLanguage("None");
+        setMaxInputAudioLength(60);
+        setTargetLanguageTextOnly("English");
+        setTargetLanguageWithSpeech("English");
+        setAudio(file);
         toast.success(
           "Audio sent successfully."
         );      
@@ -126,7 +131,7 @@ export default function HomePage() {
   const handleSubmit = async (userMessage) => {
     const SNIP = "<!-- snip -->";
 
-    const messageHistory = [...llamaMessages];
+    const messageHistory = [...chatMessages];
     if (completion.length > 0) {
       messageHistory.push({
         text: completion,
@@ -138,8 +143,8 @@ export default function HomePage() {
       isUser: true,
     });
 
-    const generatePrompt = (llamaMessages) => {
-      return llamaMessages
+    const generatePrompt = (chatMessages) => {
+      return chatMessages
         .map((message) =>
           message.isUser ? `[INST] ${message.text} [/INST]` : `${message.text}`
         )
@@ -165,7 +170,7 @@ export default function HomePage() {
       prompt = `${SNIP}\n${generatePrompt(messageHistory)}\n`;
     }
 
-    setllamaMessages(messageHistory);
+    setchatMessages(messageHistory);
 
     complete(prompt);
   };
@@ -195,10 +200,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (llamaMessages?.length > 0 || completion?.length > 0) {
+    if (chatMessages?.length > 0 || completion?.length > 0) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [llamaMessages, completion]);
+  }, [chatMessages, completion]);
 
   return (
     <>
@@ -242,7 +247,7 @@ export default function HomePage() {
 
       <main className="max-w-2xl pb-5 mx-auto mt-4 sm:px-4">
         <div className="text-center"></div>
-        {llamaMessages.length == 0 && (
+        {chatMessages.length == 0 && (
           <EmptyState setPrompt={setAndSubmitPrompt} setOpen={setOpen} />
         )}
 
@@ -279,7 +284,7 @@ export default function HomePage() {
         {error && <div>{error}</div>}
 
         <article className="pb-24">
-          {llamaMessages.map((message, index) => (
+          {chatMessages.map((message, index) => (
             <Message
               key={`message-${index}`}
               message={message.text}
