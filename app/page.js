@@ -9,6 +9,7 @@ import { Cog6ToothIcon, CodeBracketIcon } from "@heroicons/react/20/solid";
 import { useChat, useCompletion } from "ai/react";
 import { Toaster, toast } from "react-hot-toast";
 
+
 function approximateTokenCount(text) {
   return Math.ceil(text.length * 0.4);
 }
@@ -47,7 +48,7 @@ function CTA({ shortenedModelName }) {
 export default function HomePage() {
   const MAX_TOKENS = 4096;
   const bottomRef = useRef(null);
-  const [messages, setMessages] = useState([]);
+  const [llamaMessages, setllamaMessages] = useState([]);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
 
@@ -62,10 +63,10 @@ export default function HomePage() {
   
   const [audio, setAudio] = useState(null);
   const [task_name, setTaskName] = useState("S2TT (Speech to Text translation)");
-  const [input_text_language, setInputTextLanguage] = useState("Portuguese");
+  const [input_text_language, setInputTextLanguage] = useState("English");
   const [max_input_audio_length, setMaxInputAudioLength] = useState(60);
-  const [target_language_text_only, setTargetLanguageTextOnly] = useState("Portuguese");
-  const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("Portuguese");
+  const [target_language_text_only, setTargetLanguageTextOnly] = useState("English");
+  const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("English");
 
   const { complete, completion, setInput, input } = useCompletion({
     api: "/apillama",
@@ -81,7 +82,7 @@ export default function HomePage() {
     },
   });
 
-  const {append} = useChat({
+  const {messages, isLoading, append, setMessages, reload} = useChat({
     api: "/apim4t",
     body: {
       task_name: task_name,
@@ -125,7 +126,7 @@ export default function HomePage() {
   const handleSubmit = async (userMessage) => {
     const SNIP = "<!-- snip -->";
 
-    const messageHistory = [...messages];
+    const messageHistory = [...llamaMessages];
     if (completion.length > 0) {
       messageHistory.push({
         text: completion,
@@ -137,8 +138,8 @@ export default function HomePage() {
       isUser: true,
     });
 
-    const generatePrompt = (messages) => {
-      return messages
+    const generatePrompt = (llamaMessages) => {
+      return llamaMessages
         .map((message) =>
           message.isUser ? `[INST] ${message.text} [/INST]` : `${message.text}`
         )
@@ -164,7 +165,7 @@ export default function HomePage() {
       prompt = `${SNIP}\n${generatePrompt(messageHistory)}\n`;
     }
 
-    setMessages(messageHistory);
+    setllamaMessages(messageHistory);
 
     complete(prompt);
   };
@@ -175,13 +176,14 @@ export default function HomePage() {
 
   const renderAudio = async () => {
     if (audio) {
-      // use function to stop existing API call
-      append([]).then(
-        (res) => {console.log("qualquer coisa " + res)},
-        (error) => {console.log(error)}
-      )
+      await append(["Sending Audio"]);
+    }
   }
-  }
+
+    useEffect(() => {
+      if(messages.length > 0 && messages.at(messages.length - 1).role == "assistant")
+        handleSubmit(messages.at(messages.length - 1).content);
+    }, [messages]);
 
   useEffect(() => {
     if (!localStorage.getItem("toastShown")) {
@@ -193,10 +195,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (messages?.length > 0 || completion?.length > 0) {
+    if (llamaMessages?.length > 0 || completion?.length > 0) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, completion]);
+  }, [llamaMessages, completion]);
 
   return (
     <>
@@ -240,7 +242,7 @@ export default function HomePage() {
 
       <main className="max-w-2xl pb-5 mx-auto mt-4 sm:px-4">
         <div className="text-center"></div>
-        {messages.length == 0 && (
+        {llamaMessages.length == 0 && (
           <EmptyState setPrompt={setAndSubmitPrompt} setOpen={setOpen} />
         )}
 
@@ -277,7 +279,7 @@ export default function HomePage() {
         {error && <div>{error}</div>}
 
         <article className="pb-24">
-          {messages.map((message, index) => (
+          {llamaMessages.map((message, index) => (
             <Message
               key={`message-${index}`}
               message={message.text}
