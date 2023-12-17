@@ -1,4 +1,4 @@
-const Message = ({ message, isUser }) => {
+const Message = ({ message, isUser, audioSrc}) => {
   let containerClass = "bg-gray-50";
   if (isUser) {
     containerClass = "";
@@ -34,7 +34,13 @@ const Message = ({ message, isUser }) => {
             )
         )}
       </div>
+      {audioSrc && (
+          <div>
+            <audio controls src={audioSrc} className="mt-6 sm:rounded-xl" />
+          </div>
+        )}
     </div>
+    
   );
 };
 

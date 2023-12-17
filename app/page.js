@@ -55,20 +55,23 @@ export default function HomePage() {
   //   Llama params
   const [size, setSize] = useState(VERSIONS[0]); // default to 7B
   const [systemPrompt, setSystemPrompt] = useState(
-    "You are a helpful assistant."
+    // "Você é um assistente brasileiro prestativo. Portanto, converse apenas em português. "
+    "You're a helpful assistant."
   );
   const [temp, setTemp] = useState(0.75);
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(800);
   
   const [audio, setAudio] = useState(null);
+  const [responseAudio, setResponseAudio] = useState(null);
+  const [input_text, setInputText] = useState(null);
   const [task_name, setTaskName] = useState("S2TT (Speech to Text translation)");
   const [input_text_language, setInputTextLanguage] = useState("English");
   const [max_input_audio_length, setMaxInputAudioLength] = useState(60);
   const [target_language_text_only, setTargetLanguageTextOnly] = useState("English");
   const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("English");
 
-  const { complete, completion, setInput, input } = useCompletion({
+  const { complete, completion, setInput, input, isLoading: llamaLoading } = useCompletion({
     api: "/apillama",
     body: {
       version: size.version,
@@ -82,11 +85,12 @@ export default function HomePage() {
     },
   });
 
-  const {messages, isLoading, append, setMessages, reload} = useChat({
+  const {messages, isLoading, append} = useChat({
     api: "/apim4t",
     body: {
       task_name: task_name,
       input_audio: audio,
+      input_text: input_text,
       input_text_language: input_text_language,
       max_input_audio_length: max_input_audio_length,
       target_language_text_only: target_language_text_only,
@@ -100,8 +104,8 @@ export default function HomePage() {
   const handleAudio = (file) => {
     if (file) {        
         setTaskName("ASR (Automatic Speech Recognition)");
-        setInputTextLanguage("None");
-        setMaxInputAudioLength(60);
+        setInputTextLanguage("English");
+        setMaxInputAudioLength(180);
         setTargetLanguageTextOnly("English");
         setTargetLanguageWithSpeech("English");
         setAudio(file);
@@ -114,8 +118,7 @@ export default function HomePage() {
       toast.error(
         `Sorry, something went wrong`
         );
-    }
-    
+    }    
   };
 
   const setAndSubmitPrompt = (newPrompt) => {
@@ -130,17 +133,19 @@ export default function HomePage() {
 
   const handleSubmit = async (userMessage) => {
     const SNIP = "<!-- snip -->";
-
-    const messageHistory = [...chatMessages];
+    
+    const messageHistory = [...chatMessages];    
     if (completion.length > 0) {
       messageHistory.push({
         text: completion,
         isUser: false,
-      });
+        audioSrc: responseAudio,
+      });      
     }
     messageHistory.push({
       text: userMessage,
       isUser: true,
+      audioSrc: audio,
     });
 
     const generatePrompt = (chatMessages) => {
@@ -169,26 +174,79 @@ export default function HomePage() {
       // Recreate the prompt
       prompt = `${SNIP}\n${generatePrompt(messageHistory)}\n`;
     }
-
+    setResponseAudio(null);
     setchatMessages(messageHistory);
 
     complete(prompt);
   };
 
-  useEffect(() => {
-    renderAudio()
-}, [audio]);
 
-  const renderAudio = async () => {
-    if (audio) {
+
+  const sendAudio = async () => {
+    if (audio)
       await append(["Sending Audio"]);
-    }
+    
   }
+  
+  const sendLlamaText = async () => {
+    if (input_text)
+      await append(["Sending Llama response"]);    
+  }
+
+  useEffect(() => {    
+    sendAudio()
+  }, [audio]);
+
+  useEffect(() => {    
+    sendLlamaText()
+  }, [input_text]);
 
     useEffect(() => {
       if(messages.length > 0 && messages.at(messages.length - 1).role == "assistant")
-        handleSubmit(messages.at(messages.length - 1).content);
+      {
+        const output = messages.at(messages.length - 1).content;
+        const indexOfColon = output.indexOf(':');
+        if (indexOfColon !== -1) {
+          const type = output.substring(0, indexOfColon); // 'audio' or 'text'
+          const content = output.substring(indexOfColon + 1); // the actual content after 'audio:' or 'text:'
+          if (type == 'audio'){            
+            setResponseAudio(content);
+          }
+          else
+            handleSubmit(content);
+        }
+      }
     }, [messages]);
+
+    useEffect(() => {
+      if(isLoading)
+      {
+        const timer = setTimeout(() => {
+          toast.loading("Our model is starting, please wait...", {          
+            id:300
+          });
+        }, 1000);
+        return () => clearTimeout(timer);        
+      }
+      else
+      {
+        toast.remove(300)
+      }
+      
+    },[isLoading])
+
+    useEffect(() => {
+      if(!llamaLoading && completion.length > 0)
+      {
+        setAudio(null);
+        setTaskName("T2ST (Text to Speech translation)");
+        setInputTextLanguage("English");
+        setMaxInputAudioLength(180);
+        setTargetLanguageTextOnly("English");
+        setTargetLanguageWithSpeech("English");
+        setInputText(completion);        
+      }
+    },[llamaLoading])
 
   useEffect(() => {
     if (!localStorage.getItem("toastShown")) {
@@ -199,10 +257,12 @@ export default function HomePage() {
     }
   }, []);
 
+  
+
   useEffect(() => {
     if (chatMessages?.length > 0 || completion?.length > 0) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    }    
   }, [chatMessages, completion]);
 
   return (
@@ -268,12 +328,6 @@ export default function HomePage() {
           setSize={setSize}
         />
 
-        {/* {audio && (
-          <div>
-            <audio controls src={audio} className="mt-6 sm:rounded-xl" />
-          </div>
-        )} */}
-
         <ChatForm
           prompt={input}
           setPrompt={setInput}
@@ -289,9 +343,10 @@ export default function HomePage() {
               key={`message-${index}`}
               message={message.text}
               isUser={message.isUser}
+              audioSrc={message.audioSrc}
             />
           ))}
-          <Message message={completion} isUser={false} />
+          <Message message={completion} isUser={false} audioSrc={responseAudio} />
           <div ref={bottomRef} />
         </article>
       </main>
