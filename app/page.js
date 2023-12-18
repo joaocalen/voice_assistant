@@ -32,6 +32,81 @@ const VERSIONS = [
   },
 ];
 
+const LANGUAGES = [
+  {name: "Portuguese",},
+
+  {name: "English",},  
+
+  {name: "Bengali",},
+
+  {name: "Catalan",},
+
+  {name: "Czech",},
+
+  {name: "Danish",},
+
+  {name: "Dutch",},  
+
+  {name: "Estonian",},
+
+  {name: "Finnish",},
+
+  {name: "French",},
+
+  {name: "German",},
+
+  {name: "Hindi",},
+
+  {name: "Indonesian",},
+
+  {name: "Italian",},
+
+  {name: "Japanese",},
+
+  {name: "Korean",},
+
+  {name: "Maltese",},
+
+  {name: "Mandarin Chinese",},
+
+  {name: "Modern Standard Arabic",},
+
+  {name: "Northern Uzbek",},
+
+  {name: "Polish",},  
+
+  {name: "Romanian",},
+
+  {name: "Russian",},
+
+  {name: "Slovak",},
+
+  {name: "Spanish",},
+
+  {name: "Swahili",},
+
+  {name: "Swedish",},
+
+  {name: "Tagalog",},
+
+  {name: "Telugu",},
+
+  {name: "Thai",},
+
+  {name: "Turkish",},
+
+  {name: "Ukrainian",},
+
+  {name: "Urdu",},
+
+  {name: "Vietnamese",},
+
+  {name: "Welsh",},
+
+  {name: "Western Persian",},
+
+];
+
 function CTA({ shortenedModelName }) {
   return (
     <a
@@ -53,10 +128,11 @@ export default function HomePage() {
   const [error, setError] = useState(null);
 
   //   Llama params
-  const [size, setSize] = useState(VERSIONS[0]); // default to 7B
+  const [size, setSize] = useState(VERSIONS[2]); // default to 7B
+  const [language, setLanguage] = useState(LANGUAGES[0]); // default to Portuguese
   const [systemPrompt, setSystemPrompt] = useState(
-    // "Você é um assistente brasileiro prestativo. Portanto, converse apenas em português. "
-    "You're a helpful assistant."
+    "Você é um assistente brasileiro prestativo. Portanto, converse apenas em português. "
+    // "You're a helpful assistant."
   );
   const [temp, setTemp] = useState(0.75);
   const [topP, setTopP] = useState(0.9);
@@ -66,10 +142,10 @@ export default function HomePage() {
   const [responseAudio, setResponseAudio] = useState(null);
   const [input_text, setInputText] = useState(null);
   const [task_name, setTaskName] = useState("S2TT (Speech to Text translation)");
-  const [input_text_language, setInputTextLanguage] = useState("English");
+  // const [input_text_language, setInputTextLanguage] = useState("English");
   const [max_input_audio_length, setMaxInputAudioLength] = useState(60);
-  const [target_language_text_only, setTargetLanguageTextOnly] = useState("English");
-  const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("English");
+  // const [target_language_text_only, setTargetLanguageTextOnly] = useState("English");
+  // const [target_language_with_speech, setTargetLanguageWithSpeech] = useState("English");
 
   const { complete, completion, setInput, input, isLoading: llamaLoading } = useCompletion({
     api: "/apillama",
@@ -91,10 +167,10 @@ export default function HomePage() {
       task_name: task_name,
       input_audio: audio,
       input_text: input_text,
-      input_text_language: input_text_language,
+      input_text_language: language.name,
       max_input_audio_length: max_input_audio_length,
-      target_language_text_only: target_language_text_only,
-      target_language_with_speech: target_language_with_speech,
+      target_language_text_only: language.name,
+      target_language_with_speech: language.name,
     },
     onError: (error) => {
       setError(error);
@@ -104,10 +180,10 @@ export default function HomePage() {
   const handleAudio = (file) => {
     if (file) {        
         setTaskName("ASR (Automatic Speech Recognition)");
-        setInputTextLanguage("English");
+        // setInputTextLanguage("Portuguese");
         setMaxInputAudioLength(180);
-        setTargetLanguageTextOnly("English");
-        setTargetLanguageWithSpeech("English");
+        // setTargetLanguageTextOnly("Portuguese");
+        // setTargetLanguageWithSpeech("Portuguese");
         setAudio(file);
         toast.success(
           "Audio sent successfully."
@@ -240,10 +316,10 @@ export default function HomePage() {
       {
         setAudio(null);
         setTaskName("T2ST (Text to Speech translation)");
-        setInputTextLanguage("English");
+        // setInputTextLanguage("Portuguese");
         setMaxInputAudioLength(180);
-        setTargetLanguageTextOnly("English");
-        setTargetLanguageWithSpeech("English");
+        // setTargetLanguageTextOnly("Portuguese");
+        // setTargetLanguageWithSpeech("Portuguese");
         setInputText(completion);        
       }
     },[llamaLoading])
@@ -324,8 +400,11 @@ export default function HomePage() {
           topP={topP}
           setTopP={setTopP}
           versions={VERSIONS}
+          languages={LANGUAGES}
           size={size}
           setSize={setSize}
+          language={language}
+          setLanguage={setLanguage}
         />
 
         <ChatForm

@@ -15,7 +15,7 @@ export const runtime = "edge";
 export async function POST(req) {  
   const params = await req.json();
   // params.input_audio = params.input_audio == null ? "data:audio/wav;base64,A" : params.input_audio;
-  const response = params.input_audio == null ? await runSeamlessText(params) : await runSeamlessAudio(params);
+  const response = params.input_audio == null ? params.input_text_language == 'English' ? await runStyletts2(params) : await runSeamlessText(params) :  await runSeamlessAudio(params);
   // console.log(params)
   // const response = await runSeamlessM4T(params);
   let prediction = await replicate.predictions.get(response.id);
@@ -28,11 +28,13 @@ export async function POST(req) {
   
   if (prediction.status == "succeeded")
   {
-    if(prediction.output.audio_output)
+    if(params.input_audio == null && params.input_text_language == 'English')
+      return new Response("audio:"+ prediction.output);
+    else if(params.input_audio == null)
       return new Response("audio:"+ prediction.output.audio_output);
     else
       return new Response("text:"+ prediction.output.text_output);
-  }  
+  }
   else
     return new Response("Sorry, something went wrong. Please try again.");  
 }
@@ -81,4 +83,16 @@ async function runSeamlessText({
     },
     
   });
+}
+
+async function runStyletts2({
+  input_text,
+}){
+  console.log("running Styletts2");
+return await replicate.predictions.create({
+  version: "dd4d03b097968361dda9b0563716eb0758d1d5b8aeb890d22bd08634e2bd069c",
+  input: {
+    text: input_text
+  },  
+});
 }
