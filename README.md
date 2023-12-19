@@ -13,7 +13,7 @@ Install dependencies: (If you don't have nvm or npm, you can follow this guide: 
 npm install
 ```
 
-Add your [Replicate API token](https://replicate.com/account#token) to `.env.local`:
+Add your [Replicate API token](https://replicate.com/account#token) to `.env.local` (create this file, like the `.env.example` file):
 
 ```
 REPLICATE_API_TOKEN=<your-token-here>
