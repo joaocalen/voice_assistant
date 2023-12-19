@@ -1,10 +1,13 @@
+# paper
+The article about this work is in the file "relatorio.pdf", and the test examples are in the "exemplos" folder.
+
 # voice_assistant
-Voice assistant to record someone's speech in any language, translate it to english text, use this text as input in a llama model and return the output as speech in the same language used in input
+Voice assistant to record someone's speech in any language, translate it to text, use this text as input in a llama model and return the output as speech in the same language used in input
 # Llama Chat 🦙
 
 ## Usage
 
-Install dependencies:
+Install dependencies: (If you don't have nvm or npm, you can follow this guide: https://medium.com/@imvinojanv/how-to-install-node-js-and-npm-using-node-version-manager-nvm-143165b16ce1)
 
 ```console
 npm install
